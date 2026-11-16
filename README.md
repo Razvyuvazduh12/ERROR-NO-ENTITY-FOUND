@@ -14,4 +14,4 @@ The game is still in development, itch.io page at https://iamravy.itch.io/error.
 Made in Unity 6000.5 with C#
 Game Off 2026 entry, theme: SHIFT
 
-This game's CODE has been made using help from an AI. The assets, models, music, gameplay and story are made by me.
+**AI disclosure:** the code was written with AI assistance. The assets, models, music, gameplay design and story are mine.
