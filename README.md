@@ -10,7 +10,7 @@ It can only communicate with you though the world: Text on walls, moving objects
 
 It's only fear is that you will leave, and never come back, so it wants you to stay there, forever.
 
-The game is still in development, itch.io page at https://iamravy.itch.io/error.
+The game is still in development Demo is available in releases, itch.io page at https://iamravy.itch.io/error.
 Made in Unity 6000.5 with C#
 Game Off 2026 entry, theme: SHIFT
 
