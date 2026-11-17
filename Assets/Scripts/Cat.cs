@@ -27,9 +27,15 @@ public class Cat : MonoBehaviour
 
     [Header("Meow")]
     public AudioClip meow;
-    [Tooltip("Min / max seconds between meows.")]
+    [Tooltip("Min / max seconds between meows (while the player is close enough).")]
     public Vector2 meowInterval = new Vector2(10f, 25f);
+    [Tooltip("The cat only meows while the player is nearer than this, in metres. The meow is also inaudible past it. Draws as the yellow gizmo sphere.")]
+    public float meowRange = 10f;
+    [Tooltip("Distance at which the meow is at full volume, in metres. Everything between this and Meow Range fades out.")]
+    public float meowFullVolumeRange = 2f;
     [Range(0f, 1f)] public float meowVolume = 0.6f;
+    [Tooltip("All cats share one meow queue: a cat stays quiet if ANY cat meowed less than this many seconds ago, so a room full of cats doesn't meow over itself. 0 = every cat may meow freely.")]
+    public float meowGapBetweenCats = 4f;
 
     Renderer headRenderer;
     static Material sharedBlack;
@@ -43,6 +49,14 @@ public class Cat : MonoBehaviour
     float yaw;
     float nextBlink, nextMeow, eyesShutUntil = -1f;
     AudioSource source;
+
+    // Shared by every cat: the last moment any cat in the scene meowed. Kept static so a room
+    // with four cats behaves like one cat meowing, instead of four overlapping ones.
+    static float lastMeowTime = -999f;
+
+    // Domain reload is off in this project, so statics survive between Play sessions.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetMeowClock() { lastMeowTime = -999f; }
 
     void Awake()
     {
@@ -93,7 +107,9 @@ public class Cat : MonoBehaviour
         source.playOnAwake = false;
         source.spatialBlend = 1f;
         source.rolloffMode = AudioRolloffMode.Linear;
-        source.maxDistance = 25f;
+        source.minDistance = Mathf.Max(0f, meowFullVolumeRange);
+        source.maxDistance = Mathf.Max(source.minDistance + 0.01f, meowRange);
+        source.volume = 1f;
 
         nextBlink = Time.time + Random.Range(blinkInterval.x, blinkInterval.y);
         nextMeow = Time.time + Random.Range(meowInterval.x, meowInterval.y);
@@ -116,9 +132,40 @@ public class Cat : MonoBehaviour
 
         if (t >= nextMeow)
         {
-            if (meow) { source.pitch = Random.Range(0.92f, 1.08f); source.PlayOneShot(meow, meowVolume); }
-            nextMeow = t + Random.Range(meowInterval.x, meowInterval.y);
+            if (TryMeow(t)) nextMeow = t + Random.Range(meowInterval.x, meowInterval.y);
+            // Not this time: retry soon. Either the player is out of earshot (so the cat should
+            // greet him as soon as he comes back) or another cat just took the turn.
+            else nextMeow = t + 0.5f;
         }
+    }
+
+    bool TryMeow(float t)
+    {
+        if (!meow) return false;
+        if (!IsPlayerInEarshot()) return false;
+        if (meowGapBetweenCats > 0f && t - lastMeowTime < meowGapBetweenCats) return false;
+
+        source.pitch = Random.Range(0.92f, 1.08f);
+        source.PlayOneShot(meow, meowVolume);
+        lastMeowTime = t;
+        return true;
+    }
+
+    // A cat that meows from another room is why the nature room never went quiet: the sound was
+    // audible from 25 m away no matter what. Now nothing plays at all outside meowRange.
+    bool IsPlayerInEarshot()
+    {
+        Transform listener = target ? target : (Camera.main ? Camera.main.transform : null);
+        if (!listener) return true;
+        Vector3 here = pivot.sqrMagnitude > 0f ? pivot : transform.position;
+        return Vector3.Distance(listener.position, here) <= meowRange;
+    }
+
+    void OnValidate()
+    {
+        if (!source) return;
+        source.minDistance = Mathf.Max(0f, meowFullVolumeRange);
+        source.maxDistance = Mathf.Max(source.minDistance + 0.01f, meowRange);
     }
 
     void Look()
@@ -163,5 +210,14 @@ public class Cat : MonoBehaviour
     void OnDrawGizmosSelected()
     {
         if (head) Gizmos.DrawWireSphere(headRenderer ? headRenderer.bounds.center : head.position, 0.1f);
+
+        Vector3 here = Application.isPlaying && pivot.sqrMagnitude > 0f ? pivot : transform.position;
+        // Black: how far the head will follow you. Yellow: how close you have to be to hear a meow.
+        Gizmos.color = Color.black;
+        Gizmos.DrawWireSphere(here, stareRange);
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(here, meowRange);
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(here, meowFullVolumeRange);
     }
 }

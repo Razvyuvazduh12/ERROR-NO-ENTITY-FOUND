@@ -3,7 +3,12 @@ guid: 138d78142f4a9844283003f0fa0c69b8
 ModelImporter:
   serializedVersion: 24501
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Sapling Bark
+    second: {fileID: 2100000, guid: 1a80956cdb5462044b2b79d29f63d2d1, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
