@@ -78,15 +78,16 @@ public class Cat : MonoBehaviour
 
         // The model's forward is not the head's pivot axis, so read the face
         // direction off the eyeballs: they sit in front of the skull.
+        // Sub-mesh bounds are mesh metadata, not the vertex buffer, so this also works in a
+        // player build. Reading mesh.vertices needs Read/Write enabled on the model; without
+        // it a build silently hands back an EMPTY array and the fallback landed exactly 180
+        // degrees off, so every cat stared away from the player instead of at him.
         faceDir = Flat(transform.forward);
         if (eyeSubMeshes.Length > 0)
         {
-            var verts = mesh.vertices;
             Vector3 sum = Vector3.zero;
-            int n = 0;
-            foreach (int i in eyeSubMeshes)
-                foreach (int v in mesh.GetTriangles(i)) { sum += verts[v]; n++; }
-            Vector3 d = head.TransformPoint(sum / Mathf.Max(n, 1)) - pivot;
+            foreach (int i in eyeSubMeshes) sum += mesh.GetSubMesh(i).bounds.center;
+            Vector3 d = head.TransformPoint(sum / eyeSubMeshes.Length) - pivot;
             d.y = 0f;
             if (d.sqrMagnitude > 0.000001f) faceDir = d.normalized;
         }
