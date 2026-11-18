@@ -1,0 +1,12 @@
+Copyright (c) 2026 RaVy. All rights reserved.
+
+This repository is published publicly for the purposes of game jam
+review and evaluation only.
+
+No permission is granted to copy, modify, merge, publish, distribute,
+sublicense, sell, or otherwise reuse any part of this work — including
+its source code, assets, models, textures, audio, story, and dialogue —
+without prior written permission from the author.
+
+Viewing this repository, and forking it on GitHub for the purpose of
+submitting pull requests, does not grant any licence to reuse its contents.
